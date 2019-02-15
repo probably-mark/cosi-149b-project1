@@ -81,6 +81,8 @@ ap.add_argument("-w", "--width", type=int, default=320,
 	help="resized image width (should be multiple of 32)")
 ap.add_argument("-e", "--height", type=int, default=320,
 	help="resized image height (should be multiple of 32)")
+ap.add_argument("-p", "--padding", type=float, default=0.0,
+	help="amount of padding to add to each border of ROI")
 args = vars(ap.parse_args())
 
 # initialize the original frame dimensions, new frame dimensions,
@@ -127,6 +129,7 @@ while True:
 	# resize the frame, maintaining the aspect ratio
 	frame = imutils.resize(frame, width=1000)
 	orig = frame.copy()
+	(origH, origW) = frame.shape[:2] # added this too
 
 	# if our frame dimensions are None, we still need to compute the
 	# ratio of old frame dimensions to new frame dimensions
@@ -150,8 +153,13 @@ while True:
 	(rects, confidences) = decode_predictions(scores, geometry)
 	boxes = non_max_suppression(np.array(rects), probs=confidences)
 
+	# initialize the list of results
+	results = []
+
 	# loop over the bounding boxes
 	for (startX, startY, endX, endY) in boxes:
+		startX_orig = startX
+		startY_orig = startY
 		# scale the bounding box coordinates based on the respective
 		# ratios
 		startX = int(startX * rW)
@@ -162,30 +170,51 @@ while True:
 		# draw the bounding box on the frame
 		cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
-	# update the FPS counter
-	fps.update()
+		# update the FPS counter
+		fps.update()
 
-	"""
-	lets try adding the text recognition part here
+		"""
+		lets try adding the text recognition part here
 
-	Notes:
-		# in order to apply Tesseract v4 to OCR text we must supply
-		# (1) a language, (2) an OEM flag of 4, indicating that the we
-		# wish to use the LSTM neural net model for OCR, and finally
-		# (3) an OEM value, in this case, 7 which implies that we are
-		# treating the ROI as a single line of text
-	"""
+		Notes:
+			# in order to apply Tesseract v4 to OCR text we must supply
+			# (1) a language, (2) an OEM flag of 4, indicating that the we
+			# wish to use the LSTM neural net model for OCR, and finally
+			# (3) an OEM value, in this case, 7 which implies that we are
+			# treating the ROI as a single line of text
+		"""
+		# scale the bounding box coordinates based on the respective
+		# ratios
+		startX = int(startX_orig * rW)
+		startY = int(startY_orig * rH)
+		endX = int(endX * rW)
+		endY = int(endY * rH)
 
-	config = ("-l eng --oem 1 --psm 7")
-	text = pytesseract.image_to_string(orig, config=config) # first arugment was roi
+		# in order to obtain a better OCR of the text we can potentially
+		# apply a bit of padding surrounding the bounding box -- here we
+		# are computing the deltas in both the x and y directions
+		dX = int((endX - startX) * args["padding"])
+		dY = int((endY - startY) * args["padding"])
 
-	# add the bounding box coordinates and OCR'd text to the list
-	# of results
-	results = []
-	results.append(((startX, startY, endX, endY), text))
+		# apply padding to each side of the bounding box, respectively
+		startX = max(0, startX - dX)
+		startY = max(0, startY - dY)
+		endX = min(origW, endX + (dX * 2)) 		# initially origW
+		endY = min(origH, endY + (dY * 2)) 	# initially orgH
 
-	# sort the results bounding box coordinates from top to bottom
-	results = sorted(results, key=lambda r:r[0][1])
+		# extract the actual padded ROI
+		roi = orig[startY:endY, startX:endX]
+
+		# originally: config = ("-l eng --oem 1 --psm 7")
+		config = ("-l eng --oem 1 --psm 6 -c tessedit_char_whitelist=0123456789")
+		text = pytesseract.image_to_string(roi, config=config) # first arugment atleast prints with orig
+
+		# add the bounding box coordinates and OCR'd text to the list
+		# of results
+		results.append(((startX, startY, endX, endY), text))
+
+		# sort the results bounding box coordinates from top to bottom
+		results = sorted(results, key=lambda r:r[0][1])
 
 	# loop over the results
 	for ((startX, startY, endX, endY), text) in results:
@@ -203,7 +232,7 @@ while True:
 			(0, 0, 255), 2)
 		cv2.putText(output, text, (startX, startY - 20),
 			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-		""""""
+	""""""""""""
 
 	# show the output frame
 	cv2.imshow("Text Detection", orig)
@@ -228,3 +257,5 @@ else:
 
 # close all windows
 cv2.destroyAllWindows()
+
+# aa =" | J | |
