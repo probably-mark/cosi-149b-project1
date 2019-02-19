@@ -74,7 +74,7 @@ def decode_predictions(scores, geometry):
 def filter_text(text):
     if text is "":
         return True
-    
+
     is_removed_dash_digit = text.replace("-", "").isdigit()
     return not is_removed_dash_digit
 
