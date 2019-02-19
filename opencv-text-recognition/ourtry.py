@@ -152,6 +152,9 @@ while True:
     (rects, confidences) = decode_predictions(scores, geometry)
     boxes = non_max_suppression(np.array(rects), probs=confidences)
 
+    # Config for Tesseract
+    config = ('-l eng --oem 1 --psm 6')
+
     # loop over the bounding boxes
     for (startX, startY, endX, endY) in boxes:
         # scale the bounding box coordinates based on the respective
@@ -161,8 +164,19 @@ while True:
         endX = int(endX * rW)
         endY = int(endY * rH)
 
+        # Crop image and focus only in bounding box
+        cropped = orig[startY:startY + endY, startX:startX + endX].copy()
+        text = pytesseract.image_to_string(cropped, config=config)
+        if (text is "" or not any(char.isdigit() for char in text)):
+            continue
+
         # draw the bounding box on the frame
         cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+        cv2.putText(orig, text, (startX, startY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
+
+        print("OCR TEXT")
+        print("========")
+        print("{}".format(text))
 
     # update the FPS counter
     fps.update()
@@ -178,37 +192,38 @@ while True:
         # treating the ROI as a single line of text
     """
 
-    config = ('-l eng --oem 1 --psm 6 -c tessedit_char_whitelist=0123456789')
-    text = pytesseract.image_to_string(orig[startY:startY+endY, startX:startX+endX].copy(), config=config)  # first arugment was roi
-
-    # add the bounding box coordinates and OCR'd text to the list
-    # of results
-    results = []
-    results.append(((startX, startY, endX, endY), text))
-
-    # sort the results bounding box coordinates from top to bottom
-    results = sorted(results, key=lambda r: r[0][1])
-
-    # loop over the results
-    for ((startX, startY, endX, endY), text) in results:
-        # display the text OCR'd by Tesseract
-        if (text is ""):
-            continue
-
-        print("OCR TEXT")
-        print("========")
-        print("{}\n".format(text))
-
-        # strip out non-ASCII text so we can draw the text on the image
-        # using OpenCV, then draw the text and a bounding box surrounding
-        # the text region of the input image
-        text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
-        output = orig.copy()
-        cv2.rectangle(output, (startX, startY), (endX, endY),
-                      (0, 0, 255), 2)
-        cv2.putText(output, text, (startX, startY - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-        """"""
+    # config = ('-l eng --oem 1 --psm 6')
+    # # Try to only see bounding box
+    # cropped = orig[startY:startY+endY, startX:startX+endX].copy()
+    # text = pytesseract.image_to_string(cropped, config=config)  # first arugment was roi
+    #
+    # # add the bounding box coordinates and OCR'd text to the list
+    # # of results
+    # results = []
+    # results.append(((startX, startY, endX, endY), text))
+    #
+    # # sort the results bounding box coordinates from top to bottom
+    # results = sorted(results, key=lambda r: r[0][1])
+    #
+    # # loop over the results
+    # for ((startX, startY, endX, endY), text) in results:
+    #     # display the text OCR'd by Tesseract
+    #     if (text is ""):
+    #         continue
+    #
+    #     print("OCR TEXT")
+    #     print("========")
+    #     print("{}\n".format(text))
+    #
+    #     # strip out non-ASCII text so we can draw the text on the image
+    #     # using OpenCV, then draw the text and a bounding box surrounding
+    #     # the text region of the input image
+    #     text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+    #     output = orig.copy()
+    #     cv2.rectangle(output, (startX, startY), (endX, endY),
+    #                   (0, 0, 255), 2)
+    #     cv2.putText(output, text, (startX, startY - 20),
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
     # show the output frame
     cv2.imshow("Text Detection", orig)
