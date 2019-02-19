@@ -167,27 +167,29 @@ while True:
     for (startX, startY, endX, endY) in boxes:
         # scale the bounding box coordinates based on the respective
         # ratios
-        startX = int(startX * rW)
-        startY = int(startY * rH)
+        startX = max(int(startX * rW), 0)
+        startY = max(int(startY * rH), 0)
         endX = int(endX * rW)
         endY = int(endY * rH)
+        print("==coord==", "startX:", startX, "startY:", startY, "endX:", endX, "endY:", endY)
 
         tempImage = orig.copy()
         cv2.rectangle(tempImage, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
         # Crop image and focus only in bounding box
-        cropped = tempImage[startY:startY + endY, startX:startX + endX].copy()
+        cropped = tempImage[startY:(startY + endY), startX:(startX + endX)].copy()
         text = pytesseract.image_to_string(cropped, config=config)
         if filter_text(text):
             continue
+
+        print("OCR TEXT")
+        print("========", "startX:", startX, "startY:", startY, "endX:", endX, "endY:", endY)
+        print("{}".format(text))
 
         # draw the bounding box on the frame
         cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(orig, text, (startX, startY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
 
-        print("OCR TEXT")
-        print("========")
-        print("{}".format(text))
 
     # update the FPS counter
     fps.update()
