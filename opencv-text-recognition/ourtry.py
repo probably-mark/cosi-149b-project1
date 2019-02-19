@@ -85,7 +85,7 @@ ap.add_argument("-east", "--east", type=str, required=True,
                 help="path to input EAST text detector")
 ap.add_argument("-v", "--video", type=str,
                 help="path to optinal input video file")
-ap.add_argument("-c", "--min-confidence", type=float, default=0.7,
+ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
                 help="minimum probability required to inspect a region")
 ap.add_argument("-w", "--width", type=int, default=320,
                 help="resized image width (should be multiple of 32)")
@@ -190,53 +190,8 @@ while True:
         cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
         cv2.putText(orig, text, (startX, startY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
 
-
     # update the FPS counter
     fps.update()
-
-    # """
-    # lets try adding the text recognition part here
-    #
-    # Notes:
-    #     # in order to apply Tesseract v4 to OCR text we must supply
-    #     # (1) a language, (2) an OEM flag of 4, indicating that the we
-    #     # wish to use the LSTM neural net model for OCR, and finally
-    #     # (3) an OEM value, in this case, 7 which implies that we are
-    #     # treating the ROI as a single line of text
-    # """
-    #
-    # config = ('-l eng --oem 1 --psm 6')
-    # # Try to only see bounding box
-    # cropped = orig[startY:startY+endY, startX:startX+endX].copy()
-    # text = pytesseract.image_to_string(cropped, config=config)  # first arugment was roi
-    #
-    # # add the bounding box coordinates and OCR'd text to the list
-    # # of results
-    # results = []
-    # results.append(((startX, startY, endX, endY), text))
-    #
-    # # sort the results bounding box coordinates from top to bottom
-    # results = sorted(results, key=lambda r: r[0][1])
-    #
-    # # loop over the results
-    # for ((startX, startY, endX, endY), text) in results:
-    #     # display the text OCR'd by Tesseract
-    #     if (text is ""):
-    #         continue
-    #
-    #     print("OCR TEXT")
-    #     print("========")
-    #     print("{}\n".format(text))
-    #
-    #     # strip out non-ASCII text so we can draw the text on the image
-    #     # using OpenCV, then draw the text and a bounding box surrounding
-    #     # the text region of the input image
-    #     text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
-    #     output = orig.copy()
-    #     cv2.rectangle(output, (startX, startY), (endX, endY),
-    #                   (0, 0, 255), 2)
-    #     cv2.putText(output, text, (startX, startY - 20),
-    #                 cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
     # show the output frame
     cv2.imshow("Text Detection", orig)
