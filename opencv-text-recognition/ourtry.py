@@ -71,13 +71,21 @@ def decode_predictions(scores, geometry):
     return (rects, confidences)
 
 
+def filter_text(text):
+    if text is "":
+        return True
+    
+    is_removed_dash_digit = text.replace("-", "").isdigit()
+    return not is_removed_dash_digit
+
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-east", "--east", type=str, required=True,
                 help="path to input EAST text detector")
 ap.add_argument("-v", "--video", type=str,
                 help="path to optinal input video file")
-ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
+ap.add_argument("-c", "--min-confidence", type=float, default=0.7,
                 help="minimum probability required to inspect a region")
 ap.add_argument("-w", "--width", type=int, default=320,
                 help="resized image width (should be multiple of 32)")
@@ -164,10 +172,13 @@ while True:
         endX = int(endX * rW)
         endY = int(endY * rH)
 
+        tempImage = orig.copy()
+        cv2.rectangle(tempImage, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
         # Crop image and focus only in bounding box
-        cropped = orig[startY:startY + endY, startX:startX + endX].copy()
+        cropped = tempImage[startY:startY + endY, startX:startX + endX].copy()
         text = pytesseract.image_to_string(cropped, config=config)
-        if (text is "" or not any(char.isdigit() for char in text)):
+        if filter_text(text):
             continue
 
         # draw the bounding box on the frame
@@ -181,17 +192,17 @@ while True:
     # update the FPS counter
     fps.update()
 
-    """
-    lets try adding the text recognition part here
-
-    Notes:
-        # in order to apply Tesseract v4 to OCR text we must supply
-        # (1) a language, (2) an OEM flag of 4, indicating that the we
-        # wish to use the LSTM neural net model for OCR, and finally
-        # (3) an OEM value, in this case, 7 which implies that we are
-        # treating the ROI as a single line of text
-    """
-
+    # """
+    # lets try adding the text recognition part here
+    #
+    # Notes:
+    #     # in order to apply Tesseract v4 to OCR text we must supply
+    #     # (1) a language, (2) an OEM flag of 4, indicating that the we
+    #     # wish to use the LSTM neural net model for OCR, and finally
+    #     # (3) an OEM value, in this case, 7 which implies that we are
+    #     # treating the ROI as a single line of text
+    # """
+    #
     # config = ('-l eng --oem 1 --psm 6')
     # # Try to only see bounding box
     # cropped = orig[startY:startY+endY, startX:startX+endX].copy()
