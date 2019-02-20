@@ -79,6 +79,12 @@ def filter_text(text):
     return not is_removed_dash_digit
 
 
+def write_to_file(path, text):
+    f = open(path + ".txt", "a+")
+    f.write(text + "\n")
+    return f
+
+
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-east", "--east", type=str, required=True,
@@ -182,7 +188,10 @@ while True:
             continue
 
         frame_no = int(vs.get(1))
-        print("Frame " + str(frame_no) + ": [" + str(startX) + ", " + str(startY) + ", " + str(endX) + ", "
+        text_file = "Frame " + str(frame_no) + ": [" + str(startX) + ", " + str(startY) + ", " + str(endX) + ", " \
+                    + str(endY) + "], " + text
+        f = write_to_file(args["video"], text_file)
+        print("Frame " + str(frame_no) + ": [" + str(startX) + ", " + str(startY) + ", " + str(endX) + ", " \
               + str(endY) + "], " + text)
 
         # draw the bounding box on the frame
@@ -212,6 +221,9 @@ if not args.get("video", False):
 # otherwise, release the file pointer
 else:
     vs.release()
+
+# Close file
+f.close()
 
 # close all windows
 cv2.destroyAllWindows()
