@@ -1,0 +1,3 @@
+[submodule "opencv-text-recognition/opencv-text-recognition/models"]
+	path = opencv-text-recognition/opencv-text-recognition/models
+	url = https://github.com/tensorflow/models.git
