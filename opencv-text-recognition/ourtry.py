@@ -171,7 +171,6 @@ while True:
         startY = max(int(startY * rH), 0)
         endX = int(endX * rW)
         endY = int(endY * rH)
-        print("==coord==", "startX:", startX, "startY:", startY, "endX:", endX, "endY:", endY)
 
         tempImage = orig.copy()
         cv2.rectangle(tempImage, (startX, startY), (endX, endY), (0, 255, 0), 2)
@@ -182,9 +181,9 @@ while True:
         if filter_text(text):
             continue
 
-        print("OCR TEXT")
-        print("========", "startX:", startX, "startY:", startY, "endX:", endX, "endY:", endY)
-        print("{}".format(text))
+        frame_no = int(vs.get(1))
+        print("Frame " + str(frame_no) + ": [" + str(startX) + ", " + str(startY) + ", " + str(endX) + ", "
+              + str(endY) + "], " + text)
 
         # draw the bounding box on the frame
         cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
