@@ -13,4 +13,4 @@ Therefore, we changed our plan to use the TensorFlow Object Detection API to mak
 
 Our plan would be then to test this new frozen_model on the given video’s and see how accurately it can recognize the door signs.  Along with this it would be possible to annotate the training video’s and use the videos as additional training samples.  If everything goes as planned this would make it possible for us to get rid of all false positives and false negatives and create a model which would be much more accurate.
 
-If time allow, we would also like to find a way to increase the fps of the current program since the current fps is quite slow. 
+If time allow, we would also like to find a way to increase the fps of the current program since the current fps is quite low. 
