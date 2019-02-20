@@ -6,8 +6,13 @@
 `python3 ourtry.py --east frozen_east_text_detection.pb --v "Project 1 Training Data"/test.mov`
 
 ## **Train with original images:**
-https://towardsdatascience.com/detecting-pikachu-on-android-using-tensorflow-object-detection-15464c7a60cd
+Training our own model using pikachu
+<br>https://towardsdatascience.com/detecting-pikachu-on-android-using-tensorflow-object-detection-15464c7a60cd
 <br>https://towardsdatascience.com/detecting-pikachu-in-videos-using-tensorflow-object-detection-cd872ac42c1d
+
+Or raccoon's cause sometimes raccoon's can be more interesting
+<br>https://towardsdatascience.com/building-a-real-time-object-recognition-app-with-tensorflow-and-opencv-b7a2b4ebdc32
+<br>https://towardsdatascience.com/how-to-train-your-own-object-detector-with-tensorflows-object-detector-api-bec72ecfe1d9
 
 ## **Labelling application:**
 https://app.labelbox.com/projects
