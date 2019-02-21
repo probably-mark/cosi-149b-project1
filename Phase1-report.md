@@ -16,3 +16,6 @@ Therefore, we changed our plan to use the TensorFlow Object Detection API to mak
 Our plan would be then to test this new frozen_model on the given video’s and see how accurately it can recognize the door signs.  Along with this it would be possible to annotate the training video’s and use the videos as additional training samples.  If everything goes as planned this would make it possible for us to get rid of all false positives and false negatives and create a model which would be much more accurate.
 
 If time allow, we would also like to find a way to increase the fps of the current program since the current fps is quite low. 
+
+Current Status of Phase 2
+Using OpenCV we have managed to get 2 frames per second from the training video turned into JPEG files. After annotating the images that we have obtained we plan on training it on Google Cloud, however due to certain dependencies not working, cloud appears to be running on python 2.7, currently running into erros. However, once everything get trained will run the model on the video feed and see if it can correctly recognize the door signs. If the training seems incomplete, we might take additional photographs of the door sign, from different angles compared to the video, and possibly different lighting to help the model learn from a more diverse range of inputs. 
