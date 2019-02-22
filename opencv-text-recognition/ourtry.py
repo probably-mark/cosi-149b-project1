@@ -20,6 +20,9 @@ def decode_predictions(scores, geometry):
     (numRows, numCols) = scores.shape[2:4]
     rects = []
     confidences = []
+    x_count = []
+    y_count = []
+    offsetX_box = []
 
     # loop over the number of rows
     for y in range(0, numRows):
@@ -66,9 +69,12 @@ def decode_predictions(scores, geometry):
             # to our respective lists
             rects.append((startX, startY, endX, endY))
             confidences.append(scoresData[x])
+            x_count.append(x)
+            y_count.append(y)
+            offsetX_box.append(offsetX)
 
     # return a tuple of the bounding boxes and associated confidences
-    return (rects, confidences)
+    return (rects, confidences, x_count, y_count, xData1, xData3, offsetX_box)
 
 
 def filter_text(text):
@@ -128,6 +134,7 @@ else:
 
 # start the FPS throughput estimator
 fps = FPS().start()
+frame_count = 0
 
 # loop over frames from the video stream
 while True:
@@ -135,6 +142,7 @@ while True:
     # VideoStream or VideoCapture object
     frame = vs.read()
     frame = frame[1] if args.get("video", False) else frame
+    frame_count += 1
 
     # check to see if we have reached the end of the stream
     if frame is None:
@@ -163,8 +171,10 @@ while True:
 
     # decode the predictions, then  apply non-maxima suppression to
     # suppress weak, overlapping bounding boxes
-    (rects, confidences) = decode_predictions(scores, geometry)
+    (rects, confidences, x_count, y_count, xData1, xData3, offsetX_box) = decode_predictions(scores, geometry)
     boxes = non_max_suppression(np.array(rects), probs=confidences)
+
+    # print("boxes:", boxes, "rects", rects, "rW:", rW, "rH:", rH, "frame_count:", frame_count, "newW", newW, "x_count:", x_count, "y_count:", y_count, "confidence:",confidences, "xData1:", xData1, "xData1[x]", xData1[x_count], "xData3:", xData3, "xData3[x]", xData3[x_count], "offsetX_box:", offsetX_box, "angle:", angle)
 
     # Config for Tesseract
     config = ('-l eng --oem 1 --psm 6')
@@ -205,6 +215,11 @@ while True:
     cv2.imshow("Text Detection", orig)
     key = cv2.waitKey(1) & 0xFF
 
+    # write
+    out = cv2.VideoWriter('pikachu_detection_1v3.avi', cv2.VideoWriter_fourcc(
+            'M', 'J', 'P', 'G'), 10, (1280, 720))
+    out.write(frame)
+
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
         break
@@ -224,6 +239,9 @@ else:
 
 # Close file
 f.close()
+
+# release out
+out.release()
 
 # close all windows
 cv2.destroyAllWindows()
