@@ -86,7 +86,7 @@ def filter_text(text):
 
 
 def write_to_file(path, text):
-    f = open(path + ".txt", "a+")
+    f = open(path + ".txt", "w")
     f.write(text + "\n")
     return f
 
@@ -131,6 +131,9 @@ if not args.get("video", False):
 # otherwise, grab a reference to the video file
 else:
     vs = cv2.VideoCapture(args["video"])
+    width = int(vs.get(3))
+    height = int(vs.get(4))
+
 
 # start the FPS throughput estimator
 fps = FPS().start()
@@ -216,8 +219,7 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # write
-    out = cv2.VideoWriter('pikachu_detection_1v3.avi', cv2.VideoWriter_fourcc(
-            'M', 'J', 'P', 'G'), 10, (1280, 720))
+    out = cv2.VideoWriter("result_" + args["video"], cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (width, height))
     out.write(frame)
 
     # if the `q` key was pressed, break from the loop
