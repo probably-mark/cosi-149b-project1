@@ -11,6 +11,7 @@ import imutils
 import time
 import cv2
 import pytesseract
+import skvideo.io
 
 
 def decode_predictions(scores, geometry):
@@ -86,7 +87,7 @@ def filter_text(text):
 
 
 def write_to_file(path, text):
-    f = open(path + ".txt", "w")
+    f = open(path + ".txt", "a+")
     f.write(text + "\n")
     return f
 
@@ -138,6 +139,11 @@ else:
 # start the FPS throughput estimator
 fps = FPS().start()
 frame_count = 0
+
+# TODO: Output video
+out = cv2.VideoWriter("result_" + args["video"] + ".avi", cv2.VideoWriter_fourcc('M','J','P','G'), 10, (width, height))
+# writer = skvideo.io.vwrite("result_" + args["video"] + ".mp4", outputdict={"-vcodec":"libx264"})
+# writer.open()
 
 # loop over frames from the video stream
 while True:
@@ -219,8 +225,9 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # write
-    out = cv2.VideoWriter("result_" + args["video"], cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (width, height))
+    # out = cv2.VideoWriter("result_" + args["video"] + ".m4v", cv2.VideoWriter_fourcc('m','p','4','v'), 10, (width, height))
     out.write(frame)
+    # writer.write(frame)
 
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
@@ -244,6 +251,7 @@ f.close()
 
 # release out
 out.release()
+# writer.release()
 
 # close all windows
 cv2.destroyAllWindows()
