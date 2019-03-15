@@ -11,13 +11,11 @@ import imutils
 import time
 import cv2
 import pytesseract
-import skvideo.io
 
 
 def decode_predictions(scores, geometry):
-    # grab the number of rows and columns from the scores volume, then
-    # initialize our set of bounding box rectangles and corresponding
-    # confidence scores
+    # grab the number of rows and columns from the scores volume
+    # initialize our set of bounding box rectangles and corresponding confidence scores
     (numRows, numCols) = scores.shape[2:4]
     rects = []
     confidences = []
@@ -27,8 +25,7 @@ def decode_predictions(scores, geometry):
 
     # loop over the number of rows
     for y in range(0, numRows):
-        # extract the scores (probabilities), followed by the
-        # geometrical data used to derive potential bounding box
+        # extract the scores, followed by the geometrical data used to derive potential bounding box
         # coordinates that surround text
         scoresData = scores[0, 0, y]
         xData0 = geometry[0, 0, y]
@@ -39,35 +36,29 @@ def decode_predictions(scores, geometry):
 
         # loop over the number of columns
         for x in range(0, numCols):
-            # if our score does not have sufficient probability,
-            # ignore it
+            # if our score does not have sufficient probability, ignore it
             if scoresData[x] < args["min_confidence"]:
                 continue
 
-            # compute the offset factor as our resulting feature
-            # maps will be 4x smaller than the input image
+            # compute the offset factor as our resulting feature maps will be 4x smaller than the input image
             (offsetX, offsetY) = (x * 4.0, y * 4.0)
 
-            # extract the rotation angle for the prediction and
-            # then compute the sin and cosine
+            # extract the rotation angle for the prediction and then compute the sin and cosine
             angle = anglesData[x]
             cos = np.cos(angle)
             sin = np.sin(angle)
 
-            # use the geometry volume to derive the width and height
-            # of the bounding box
+            # use the geometry volume to derive the width and height of the bounding box
             h = xData0[x] + xData2[x]
             w = xData1[x] + xData3[x]
 
-            # compute both the starting and ending (x, y)-coordinates
-            # for the text prediction bounding box
+            # compute both the starting and ending (x, y)-coordinates for the text prediction bounding box
             endX = int(offsetX + (cos * xData1[x]) + (sin * xData2[x]))
             endY = int(offsetY - (sin * xData1[x]) + (cos * xData2[x]))
             startX = int(endX - w)
             startY = int(endY - h)
 
-            # add the bounding box coordinates and probability score
-            # to our respective lists
+            # add the bounding box coordinates and probability score to our respective lists
             rects.append((startX, startY, endX, endY))
             confidences.append(scoresData[x])
             x_count.append(x)
@@ -106,15 +97,13 @@ ap.add_argument("-e", "--height", type=int, default=320,
                 help="resized image height (should be multiple of 32)")
 args = vars(ap.parse_args())
 
-# initialize the original frame dimensions, new frame dimensions,
-# and ratio between the dimensions
+# initialize the original frame dimensions, new frame dimensions, and ratio between the dimensions
 (W, H) = (None, None)
 (newW, newH) = (args["width"], args["height"])
 (rW, rH) = (None, None)
 
-# define the two output layer names for the EAST detector model that
-# we are interested -- the first is the output probabilities and the
-# second can be used to derive the bounding box coordinates of text
+# define the two output layer names for the EAST detector model that we are interested -- the first is the ]
+# output probabilities and the second can be used to derive the bounding box coordinates of text
 layerNames = [
     "feature_fusion/Conv_7/Sigmoid",
     "feature_fusion/concat_3"]
@@ -123,27 +112,13 @@ layerNames = [
 print("[INFO] loading EAST text detector...")
 net = cv2.dnn.readNet(args["east"])
 
-# if a video path was not supplied, grab the reference to the web cam
-if not args.get("video", False):
-    print("[INFO] starting video stream...")
-    vs = VideoStream(src=0).start()
-    time.sleep(1.0)
-
-# otherwise, grab a reference to the video file
-else:
-    vs = cv2.VideoCapture(args["video"])
-    width = int(vs.get(3))
-    height = int(vs.get(4))
-
+vs = cv2.VideoCapture(args["video"])
+width = int(vs.get(3))
+height = int(vs.get(4))
 
 # start the FPS throughput estimator
 fps = FPS().start()
 frame_count = 0
-
-# TODO: Output video
-out = cv2.VideoWriter("result_" + args["video"] + ".avi", cv2.VideoWriter_fourcc('M','J','P','G'), 10, (width, height))
-# writer = skvideo.io.vwrite("result_" + args["video"] + ".mp4", outputdict={"-vcodec":"libx264"})
-# writer.open()
 
 # loop over frames from the video stream
 while True:
@@ -159,6 +134,8 @@ while True:
 
     # resize the frame, maintaining the aspect ratio
     frame = imutils.resize(frame, width=1000)
+    # TODO: Gray scale frames
+    frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     orig = frame.copy()
 
     # if our frame dimensions are None, we still need to compute the
@@ -183,7 +160,6 @@ while True:
     (rects, confidences, x_count, y_count, xData1, xData3, offsetX_box) = decode_predictions(scores, geometry)
     boxes = non_max_suppression(np.array(rects), probs=confidences)
 
-    # print("boxes:", boxes, "rects", rects, "rW:", rW, "rH:", rH, "frame_count:", frame_count, "newW", newW, "x_count:", x_count, "y_count:", y_count, "confidence:",confidences, "xData1:", xData1, "xData1[x]", xData1[x_count], "xData3:", xData3, "xData3[x]", xData3[x_count], "offsetX_box:", offsetX_box, "angle:", angle)
 
     # Config for Tesseract
     config = ('-l eng --oem 1 --psm 6')
@@ -224,11 +200,6 @@ while True:
     cv2.imshow("Text Detection", orig)
     key = cv2.waitKey(1) & 0xFF
 
-    # write
-    # out = cv2.VideoWriter("result_" + args["video"] + ".m4v", cv2.VideoWriter_fourcc('m','p','4','v'), 10, (width, height))
-    out.write(frame)
-    # writer.write(frame)
-
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
         break
@@ -248,10 +219,6 @@ else:
 
 # Close file
 f.close()
-
-# release out
-out.release()
-# writer.release()
 
 # close all windows
 cv2.destroyAllWindows()
