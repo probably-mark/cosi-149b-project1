@@ -11,6 +11,7 @@ import imutils
 import time
 import cv2
 import pytesseract
+import skvideo.io
 
 
 def decode_predictions(scores, geometry):
@@ -131,10 +132,18 @@ if not args.get("video", False):
 # otherwise, grab a reference to the video file
 else:
     vs = cv2.VideoCapture(args["video"])
+    width = int(vs.get(3))
+    height = int(vs.get(4))
+
 
 # start the FPS throughput estimator
 fps = FPS().start()
 frame_count = 0
+
+# TODO: Output video
+out = cv2.VideoWriter("result_" + args["video"] + ".avi", cv2.VideoWriter_fourcc('M','J','P','G'), 10, (width, height))
+# writer = skvideo.io.vwrite("result_" + args["video"] + ".mp4", outputdict={"-vcodec":"libx264"})
+# writer.open()
 
 # loop over frames from the video stream
 while True:
@@ -216,9 +225,9 @@ while True:
     key = cv2.waitKey(1) & 0xFF
 
     # write
-    out = cv2.VideoWriter('pikachu_detection_1v3.avi', cv2.VideoWriter_fourcc(
-            'M', 'J', 'P', 'G'), 10, (1280, 720))
+    # out = cv2.VideoWriter("result_" + args["video"] + ".m4v", cv2.VideoWriter_fourcc('m','p','4','v'), 10, (width, height))
     out.write(frame)
+    # writer.write(frame)
 
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
@@ -242,6 +251,7 @@ f.close()
 
 # release out
 out.release()
+# writer.release()
 
 # close all windows
 cv2.destroyAllWindows()
