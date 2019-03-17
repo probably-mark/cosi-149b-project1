@@ -6,6 +6,7 @@ import sys
 import tarfile
 import tensorflow as tf
 import zipfile
+import argparse
 
 from collections import defaultdict
 from io import StringIO
@@ -18,12 +19,15 @@ from utils import visualization_utils as vis_util
 
 import cv2
 
+fileDir = os.path.dirname(os.path.realpath('__file__'))
 # Path to frozen detection graph. This is the actual model that is used
 # for the object detection.
-PATH_TO_CKPT = r'C:\Users\MyongJoon\Desktop\Senior_Spring\COSI149B\python_script\temp\frozen_inference_graph.pb'
+PATH_TO_CKPT = r'our_model/frozen_inference_graph.pb'
 
 # List of the strings that is used to add correct label for each box.
-PATH_TO_LABELS = os.path.join(r'C:\Users\MyongJoon\Desktop\Senior_Spring\COSI149B\python_script\temp', 'label_map.pbtxt')
+PATH_TO_LABELS = r'our_model/label_map.pbtxt'
+
+PATH_TO_VIDEO = "IMG_0994.MOV"
 
 NUM_CLASSES = 1
 
@@ -31,7 +35,7 @@ sys.path.append("..")
 
 
 def detect_in_video():
-
+	
     # VideoWriter is the responsible of creating a copy of the video
     # used for the detections but with the detections overlays. Keep in
     # mind the frame size has to be the same as original video.
@@ -46,7 +50,7 @@ def detect_in_video():
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
 
-    label_map = label_map_util.load_labelmap(r'C:\Users\MyongJoon\Desktop\Senior_Spring\COSI149B\python_script\temp\label_map.pbtxt')
+    label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
     categories = label_map_util.convert_label_map_to_categories(
         label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
@@ -68,15 +72,12 @@ def detect_in_video():
                 'detection_classes:0')
             num_detections = detection_graph.get_tensor_by_name(
                 'num_detections:0')
-            cap = cv2.VideoCapture('IMG_0994.MOV')
+            cap = cv2.VideoCapture(PATH_TO_VIDEO)
 
             while(cap.isOpened()):
                 # Read the frame
                 ret, frame = cap.read()
 
-                # Recolor the frame. By default, OpenCV uses BGR color space.
-                # This short blog post explains this better:
-                # https://www.learnopencv.com/why-does-opencv-use-bgr-color-format/
                 color_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
                 image_np_expanded = np.expand_dims(color_frame, axis=0)
@@ -112,7 +113,12 @@ def detect_in_video():
 
 
 def main():
-    detect_in_video()
+	#ap = argparse.ArgumentParser()
+	#ap.add_argument("--input", type=str, required=True,help="path to input")
+	#ap.add_argument("--output",type=str, required = True, help="path to output")
+	#args = ap.parse_args
+	
+	detect_in_video()
 
 
 if __name__ == '__main__':
